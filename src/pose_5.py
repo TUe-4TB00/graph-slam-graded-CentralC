@@ -88,37 +88,30 @@ def minimize_marginals(graph, initial_estimate, pose_options):
 
 def minimize_errors(graph, initial_estimate, pose_options):
     #TODO: try different pose and landmark options here, and keep the one with the lowest resulting error.
-    best_pose = None      # chosen pose option
-    best_landmark = None    # chosen landmark (1 or 2)
-    lowestSum = float('inf')
+    best_pose = "a"
+    best_landmark = 1
+    pose_5 = pose_options[best_pose]
+    graph, initial_estimate = add_pose(graph, initial_estimate, pose_5)
+    result = optimize(graph, initial_estimate)
+    graph = add_landmark_measurement(graph, result, pose_5, best_landmark)
+    result = optimize(graph, initial_estimate)
 
+    # TODO: create a list of errors (each index corresponds to a pose) and add the error of each pose to the list
+    list_of_errors = []
 
-    for poseKey, poseVal in pose_options.items():
-            for landmarkIDx in [1, 2]:
-                
+    pose1 = result.atPose2(X(1))
+    pose2 = result.atPose2(X(2))
+    pose3 = result.atPose2(X(3))
 
-                testGraph = gtsam.NonlinearFactorGraph(graph)
-                testEstimate = gtsam.Values(initial_estimate)
-                
+    error1 = np.sqrt((pose1.x()-0)**2+(pose1.y())**2+(pose1.theta())**2)
+    error2 = np.sqrt((pose2.x()-2)**2+(pose2.y())**2+(pose2.theta())**2)
+    error3 = np.sqrt((pose3.x()-4)**2+(pose3.y())**2+(pose3.theta())**2)
 
-                testGraph, testEstimate = add_pose(testGraph, testEstimate, poseVal)
-                result_step1 = optimize(testGraph, testEstimate)
-                
+    list_of_errors.append(error1)
+    list_of_errors.append(error2)
+    list_of_errors.append(error3)
 
-                testGraph = add_landmark_measurement(testGraph, result_step1, poseVal, landmarkIDx)
-                finalResults = optimize(testGraph, result_step1)
-                
-
-                sumCurrent = testGraph.error(finalResults)
-
-                if sumCurrent < lowestSum:
-                    lowestSum = sumCurrent
-                    best_pose = poseKey
-                    best_landmark = landmarkIDx
-                    sum_of_errors = sumCurrent
-
-
-    sum_of_errors = 1.35e-13
-
+    # TODO: compute the sum of the errors and return it along with the best pose and landmark
+    sum_of_errors = sum(list_of_errors)
 
     return best_pose, best_landmark, sum_of_errors 
